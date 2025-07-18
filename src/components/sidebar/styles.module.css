@@ -1,0 +1,22 @@
+.sidebar {
+  width: 300px;
+  padding: 10px 30px;
+  position: fixed;
+  background-color: #fff;
+  min-height: 100vh;
+  box-shadow: 0 0 10px #919191;
+}
+.sidebar img {
+  width: 150px;
+  margin-bottom: 40px;
+  margin-top: 10px;
+
+}
+.sidebar ul {
+  padding: 0;
+  list-style: none;
+}
+.sidebar ul li {
+  padding: 10px 0;
+  font-family: var(--font-reg);
+}

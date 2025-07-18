@@ -1,0 +1,27 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+@font-face {
+  font-family: "pop-r";
+  src: url("./assets/fonts/Poppins-Regular.ttf");
+}
+@font-face {
+  font-family: "pop-s";
+  src: url("./assets/fonts/Poppins-SemiBold.ttf");
+}
+@font-face {
+  font-family: "pop-b";
+  src: url("./assets/fonts/Poppins-SemiBold.ttf");
+}
+
+:root {
+  --font-reg: "pop-r";
+  --font-sem: "pop-s";
+  --font-bold: "pop-b";
+  --bg-color: "#000";
+  --txt-color-b: "#000";
+  --txt-color-w: "#fff";
+}

@@ -1,0 +1,13 @@
+.dashboard {
+  margin-left: 300px;
+  padding: 10px 30px;
+}
+.dashboardHeading h1 {
+  font-family: var(--font-bold);
+  font-size: 2.3rem;
+  font-weight: 400;
+}
+
+.dashboardHeading p{
+    font-family: var(--font-reg);
+}
