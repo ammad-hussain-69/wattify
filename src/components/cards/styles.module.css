@@ -1,0 +1,37 @@
+.Cards {
+  border: 1px solid #ccc;
+  padding: 10px 20px;
+  border-radius: 10px;
+box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+}
+.cardsTopSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.cardsTopSection p {
+  margin: 0;
+  font-family: var(--font-reg);
+}
+.icon {
+  font-size: 1.5rem;
+  background-color: #79797948;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border-radius: 50%;
+  font-size: 15px;
+}
+
+.cardsMidSection h3 {
+  font-family: var(--font-sem);
+}
+.cardsMidSection p{
+    font-family: var(--font-reg);
+    color: #666;
+}
+.cardsMidSection p span{
+    margin-left: 10px;
+    font-size: 13px;
+}
