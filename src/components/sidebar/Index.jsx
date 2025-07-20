@@ -24,8 +24,8 @@ const Sidebar = () => {
       <img src={Logo} alt="Logo" />
       <ul>
         <li><Link style={{ textDecoration: "none", color: "inherit" }} to="/dashboard"><MdOutlineDashboard /> Dashboard</Link></li>
-        <li><Link style={{ textDecoration: "none", color: "inherit" }} to="/settings"><CiSettings /> Settings</Link></li>
-        <li><Link style={{ textDecoration: "none", color: "inherit" }} onClick={logoutUser}><CiLogout /> Logout</Link></li>
+        {/* <li><Link style={{ textDecoration: "none", color: "inherit" }} to="/settings"><CiSettings /> Settings</Link></li> */}
+        <li><Link style={{ textDecoration: "none", color  : "inherit" }} onClick={logoutUser}><CiLogout /> Logout</Link></li>
       </ul>
     </div>
   );

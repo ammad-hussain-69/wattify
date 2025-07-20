@@ -1,83 +1,112 @@
-  // AddDevice.js
-  import React, { useState, useEffect } from "react";
-  import { getAuth } from "firebase/auth";
-  import { getDatabase, ref, push, get } from "firebase/database";
-  import styles from './styles.module.css';
-  import { FaPlus } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { getAuth } from "firebase/auth";
+import { getDatabase, ref, push, get, update, remove } from "firebase/database";
+import styles from './styles.module.css';
+import { FaPlus, FaTrash, FaPlug, FaUnlink } from "react-icons/fa";
+import DeviceDetailsModal from "../../components/deviceModal/Index";
 
-  const AddDevice = () => {
-    const [deviceName, setDeviceName] = useState("");
-    const [ssid, setSsid] = useState("");
-    const [password, setPassword] = useState("");
-    const [devices, setDevices] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+const AddDevice = () => {
+  const [deviceName, setDeviceName] = useState("");
+  const [ssid, setSsid] = useState("");
+  const [password, setPassword] = useState("");
+  const [devices, setDevices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDevice, setSelectedDevice] = useState(null);
+  const auth = getAuth();
+  const db = getDatabase();
 
-    const auth = getAuth();
-    const db = getDatabase();
-
-    const fetchDevices = async () => {
-      const uid = auth.currentUser.uid;
-      const snapshot = await get(ref(db, `users/${uid}/devices`));
+  const fetchDevices = async () => {
+    setLoading(true);
+    try {
+      const snapshot = await get(ref(db, `wattify`));
       if (snapshot.exists()) {
-        const data = snapshot.val();
-        const arr = Object.entries(data).map(([id, device]) => ({
-          id,
-          ...device,
+        const allDevices = snapshot.val();
+        const deviceList = Object.entries(allDevices).map(([key, val]) => ({
+          id: key,
+          deviceName: val.DeviceUserName || "Unnamed",
+          wifiSSID: val.WiFiID || "",
+          wifiPassword: val.WiFiPassword || "",
+          relay_state: val.relay_state || "unknown",
+          current: val.Readings?.current || 0,
         }));
-        setDevices(arr);
+        setDevices(deviceList);
       } else {
         setDevices([]);
       }
-      setLoading(false);
-    };
+    } catch (err) {
+      console.error("Error fetching wattify devices:", err);
+    }
+    setLoading(false);
+  };
 
-    const handleAddDevice = async () => {
-      const uid = auth.currentUser.uid;
+  const handleAddDevice = async () => {
+    const uid = auth.currentUser?.uid;
 
-      if (!deviceName || !ssid || !password) {
-        alert("Please fill all fields!");
-        return;
+    if (!deviceName || !ssid || !password) {
+      alert("Please fill all fields!");
+      return;
+    }
+
+    const deviceId = `${ssid}_${password}_${deviceName}`;
+    const deviceData = {
+      DeviceUserName: deviceName,
+      WiFiID: ssid,
+      WiFiPassword: password,
+      relay_state: "low",
+      Readings: {
+        current: 0
       }
-
-      const deviceData = {
-        deviceName,
-        wifiSSID: ssid,
-        wifiPassword: password,
-        relay_state: "low",
-        current: 0,
-        addedAt: new Date().toISOString(),
-      };
-
-      await push(ref(db, `users/${uid}/devices`), deviceData);
-      setDeviceName("");
-      setSsid("");
-      setPassword("");
-      setIsModalOpen(false);
-      fetchDevices();
     };
 
-    const handleModalClose = () => {
-      setIsModalOpen(false);
-      // Reset form when closing
-      setDeviceName("");
-      setSsid("");
-      setPassword("");
-    };
+    await update(ref(db, `wattify/${deviceId}`), deviceData);
 
-    useEffect(() => {
+    setDeviceName("");
+    setSsid("");
+    setPassword("");
+    setIsModalOpen(false);
+    fetchDevices();
+  };
+
+  const toggleRelay = async (deviceId, currentState) => {
+    const newState = currentState === "high" ? "low" : "high";
+    await update(ref(db, `wattify/${deviceId}`), { relay_state: newState });
+    fetchDevices();
+  };
+
+  const deleteDevice = async (deviceId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this device?");
+    if (confirmDelete) {
+      await remove(ref(db, `wattify/${deviceId}`));
       fetchDevices();
-    }, []);
+    }
+  };
 
-    return (
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setDeviceName("");
+    setSsid("");
+    setPassword("");
+  };
+
+  useEffect(() => {
+    fetchDevices();
+  }, []);
+
+  return (
+    <>
+      {selectedDevice && (
+        <DeviceDetailsModal
+          deviceId={selectedDevice.id}
+          deviceName={selectedDevice.deviceName}
+          onClose={() => setSelectedDevice(null)}
+        />
+      )}
       <div className={styles.container}>
         <div className={styles.header}>
           <h2 className={styles.title}>Your Devices</h2>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className={styles.addButton}
-          >
-          <FaPlus />
+          <button onClick={() => setIsModalOpen(true)} className={styles.addButton}>
+            <FaPlus />
           </button>
         </div>
 
@@ -95,7 +124,7 @@
           <div className={styles.deviceList}>
             {devices.map((dev) => (
               <div key={dev.id} className={styles.deviceCard}>
-                <div className={styles.deviceInfo}>
+                <div className={styles.deviceInfo} onClick={() => setSelectedDevice(dev)}>
                   <h3 className={styles.deviceName}>{dev.deviceName}</h3>
                   <div className={styles.deviceDetails}>
                     <span className={styles.current}>Current: {dev.current} A</span>
@@ -104,31 +133,37 @@
                     </span>
                   </div>
                 </div>
+                <div className={styles.deviceActions}>
+                  <button
+                    className={styles.toggleRelay}
+                    onClick={() => toggleRelay(dev.id, dev.relay_state)}
+                  >
+                    {dev.relay_state === "high" ? <FaUnlink /> : <FaPlug />}
+                  </button>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => deleteDevice(dev.id)}
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Classic Modal */}
+        {/* Modal for Adding Device */}
         {isModalOpen && (
           <div className={styles.modalOverlay} onClick={handleModalClose}>
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
               <div className={styles.modalHeader}>
                 <h3 className={styles.modalTitle}>Add New Device</h3>
-                <button 
-                  onClick={handleModalClose}
-                  className={styles.closeButton}
-                  aria-label="Close modal"
-                >
-                  ✕
-                </button>
+                <button onClick={handleModalClose} className={styles.closeButton}>✕</button>
               </div>
-              
+
               <div className={styles.modalBody}>
                 <div className={styles.formGroup}>
-                  <label className={styles.label} htmlFor="deviceName">
-                    Device Name <span className={styles.required}>*</span>
-                  </label>
+                  <label htmlFor="deviceName">Device Name *</label>
                   <input
                     id="deviceName"
                     type="text"
@@ -138,11 +173,8 @@
                     className={styles.input}
                   />
                 </div>
-
                 <div className={styles.formGroup}>
-                  <label className={styles.label} htmlFor="ssid">
-                    WiFi SSID <span className={styles.required}>*</span>
-                  </label>
+                  <label htmlFor="ssid">WiFi SSID *</label>
                   <input
                     id="ssid"
                     type="text"
@@ -152,11 +184,8 @@
                     className={styles.input}
                   />
                 </div>
-
                 <div className={styles.formGroup}>
-                  <label className={styles.label} htmlFor="password">
-                    WiFi Password <span className={styles.required}>*</span>
-                  </label>
+                  <label htmlFor="password">WiFi Password *</label>
                   <input
                     id="password"
                     type="password"
@@ -169,24 +198,15 @@
               </div>
 
               <div className={styles.modalFooter}>
-                <button
-                  onClick={handleModalClose}
-                  className={styles.cancelButton}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddDevice}
-                  className={styles.saveButton}
-                >
-                  Save Device
-                </button>
+                <button onClick={handleModalClose} className={styles.cancelButton}>Cancel</button>
+                <button onClick={handleAddDevice} className={styles.saveButton}>Save Device</button>
               </div>
             </div>
           </div>
         )}
       </div>
-    );
-  };
+    </>
+  );
+};
 
-  export default AddDevice;
+export default AddDevice;

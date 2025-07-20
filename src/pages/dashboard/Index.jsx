@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./styles.module.css";
 import Cards from "../../components/cards/Index";
 import { TbSettings2 } from "react-icons/tb";
@@ -16,39 +16,81 @@ import {
   YAxis,
 } from "recharts";
 import AddDevice from "../../components/addDevice/Index";
+import DeviceList from "../../components/allDevices/Index";
 const Dashboard = () => {
-  const data = [
+  const [stats, setStats] = useState({
+    totalCurrent: 0,
+    totalVoltage: 0,
+    averagePower: 0,
+    totalUnits: 0,
+  });
+
+  useEffect(() => {
+    const fetchReadings = async () => {
+      try {
+        const db = getDatabase();
+        const snapshot = await get(child(ref(db), "wattify/Arqish_arqish5634_Test-Machine/Readings"));
+
+        if (snapshot.exists()) {
+          const readings = Object.values(snapshot.val()).slice(10); // Skip first 10
+
+          let totalCurrent = 0;
+          let totalVoltage = 0;
+          let totalPower = 0;
+          let totalUnits = 0;
+
+          readings.forEach(r => {
+            totalCurrent += Number(r.current || 0);
+            totalVoltage += Number(r.voltage || 0);
+            totalPower += Number(r.power || 0);
+            totalUnits += Number(r.units || 0);
+          });
+
+          const count = readings.length || 1;
+
+          setStats({
+            totalCurrent: totalCurrent.toFixed(2),
+            totalVoltage: totalVoltage.toFixed(2),
+            averagePower: (totalPower / count).toFixed(2),
+            totalUnits: totalUnits.toFixed(2),
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching readings:", error);
+      }
+    };
+
+    fetchReadings();
+  }, []);
+
+  const cardsData = [
     {
-      title: "Current Usage",
-      numb: -24,
-      unit: "kW",
-      description: "Live power consumption",
-      consumptionRate: 2.1,
+      title: "Total Current",
+      numb: stats.totalCurrent,
+      unit: "A",
+      description: "Live current usage",
       icon: <TbSettings2 />,
     },
     {
-      title: "Today's cost",
-      numb: 24,
-      unit: "",
+      title: "Total Units",
+      numb: stats.totalUnits,
+      unit: "kWh",
+      description: "Energy consumed",
       money: "$",
-      description: "Live power consumption",
-      consumptionRate: 2.1,
       icon: <FaDollarSign />,
     },
     {
-      title: "Current Usage",
-      numb: -24,
-      unit: "kW",
-      description: "Live power consumption",
-      consumptionRate: 2.1,
+      title: "Avg. Power",
+      numb: stats.averagePower,
+      unit: "W",
+      description: "Average power usage",
       icon: <PiLightning />,
     },
     {
-      title: "Current Usage",
-      numb: +24,
-      unit: "%",
-      description: "Live power consumption",
-      consumptionRate: 2.1,
+      title: "Voltage Sum",
+      numb: stats.totalVoltage,
+      unit: "V",
+      description: "Total voltage",
       icon: <LiaSuperpowers />,
     },
   ];
@@ -60,9 +102,9 @@ const Dashboard = () => {
       </div>
       <div className={styles.cardSection}>
         <div className="row">
-          {data.map((items, i) => (
+          {cardsData.map((data, idx) => (
             <div className="col-lg-3">
-              <Cards data={items} key={i} />
+               <Cards key={idx} data={data} />
             </div>
           ))}
         </div>
@@ -76,6 +118,7 @@ const Dashboard = () => {
           </div>
           <div className="col-lg-4">
             <AddDevice />
+            {/* <DeviceList /> */}
           </div>
         </div>
       </div>

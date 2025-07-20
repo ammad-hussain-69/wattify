@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AreaChart,
   Area,
@@ -8,36 +8,47 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { getDatabase, ref, get, child } from "firebase/database";
 
 const Charts = () => {
-  // Sample data for today's consumption (hourly)
-  const todayData = [
-    { time: "12 AM", consumption: 1.2 },
-    { time: "2 AM", consumption: 1.0 },
-    { time: "4 AM", consumption: 0.8 },
-    { time: "6 AM", consumption: 1.5 },
-    { time: "8 AM", consumption: 2.2 },
-    { time: "10 AM", consumption: 2.8 },
-    { time: "12 PM", consumption: 3.5 },
-    { time: "2 PM", consumption: 4.1 },
-    { time: "4 PM", consumption: 3.9 },
-    { time: "6 PM", consumption: 3.2 },
-    { time: "8 PM", consumption: 2.7 },
-    { time: "10 PM", consumption: 2.0 },
-  ];
-
-  // Sample data for week consumption (daily)
-  const weekData = [
-    { time: "Mon", consumption: 18 },
-    { time: "Tue", consumption: 21 },
-    { time: "Wed", consumption: 17 },
-    { time: "Thu", consumption: 22 },
-    { time: "Fri", consumption: 19 },
-    { time: "Sat", consumption: 24 },
-    { time: "Sun", consumption: 20 },
-  ];
-
+  const [todayData, setTodayData] = useState([]);
+  const [weekData] = useState([]); // Placeholder
   const [activeData, setActiveData] = useState("today");
+
+  useEffect(() => {
+    const fetchReadings = async () => {
+      try {
+        const db = getDatabase();
+        const snapshot = await get(child(ref(db), "wattify/Arqish_arqish5634_Test-Machine/Readings"));
+
+        if (snapshot.exists()) {
+          const readings = snapshot.val();
+
+          // Convert to array and sort by key (timestamp order)
+          const sortedReadings = Object.entries(readings)
+            .sort(([a], [b]) => a.localeCompare(b)) // sorting by Firebase keys
+            .map(([_, value]) => value);
+
+          // Remove the first 10
+          const trimmedReadings = sortedReadings.slice(10);
+
+          // Prepare chart data
+          const chartData = trimmedReadings.map((reading, index) => ({
+            time: reading.timestamp || `T+${index}s`,
+            consumption: parseFloat(reading.current.toFixed(2)) || 0,
+          }));
+
+          setTodayData(chartData);
+        } else {
+          console.log("No readings found.");
+        }
+      } catch (error) {
+        console.error("Error fetching readings:", error);
+      }
+    };
+
+    fetchReadings();
+  }, []);
 
   const getChartData = () => (activeData === "today" ? todayData : weekData);
 
@@ -85,8 +96,8 @@ const Charts = () => {
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="time" />
-          <YAxis unit=" kWh" />
-          <Tooltip formatter={(value) => [`${value} kWh`, "Consumption"]} />
+          <YAxis unit=" A" />
+          <Tooltip formatter={(value) => [`${value} A`, "Current"]} />
           <Area
             type="monotone"
             dataKey="consumption"
