@@ -137,6 +137,7 @@ const AddDevice = () => {
                   <button
                     className={styles.toggleRelay}
                     onClick={() => toggleRelay(dev.id, dev.relay_state)}
+                    style={{ backgroundColor: dev.relay_state === "high" ? "#2ecc71" : "#e74c3c", color: "white" }}
                   >
                     {dev.relay_state === "high" ? <FaUnlink /> : <FaPlug />}
                   </button>

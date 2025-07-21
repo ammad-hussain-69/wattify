@@ -109,6 +109,9 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #3498db;
   transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .deviceCard:hover {
@@ -387,4 +390,20 @@
 
 .deviceActions{
   display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.deviceActions button {
+  margin-top: 8px;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #ecf0f1;
+}
+.deviceActions button:nth-child(2){
+  background-color: #e74c3c;
+  color: white;
 }

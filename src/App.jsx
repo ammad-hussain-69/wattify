@@ -5,6 +5,7 @@ import Dashboard from "./pages/dashboard/Index";
 import Protected from "./components/ProtectedRoute";
 import Sidebar from "./components/sidebar/Index";
 import { useEffect, useState } from "react";
+import Reports from "./pages/reports/Index";
 function App() {
   const [user, setUser] = useState(null);
   useEffect(() => {
@@ -23,6 +24,14 @@ function App() {
           element={
             <Protected>
               <Dashboard />
+            </Protected>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <Protected>
+              <Reports />
             </Protected>
           }
         />

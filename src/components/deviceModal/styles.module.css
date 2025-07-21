@@ -25,7 +25,18 @@
   justify-content: space-between;
   align-items: center;
 }
-
+.header button{
+  width: 30px;
+  height: 30px;
+  border: none;
+  background-color: #e74d3c;
+  font-size: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  color: white;
+}
 .body {
   margin-top: 20px;
 }

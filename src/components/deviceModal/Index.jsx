@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getDatabase, ref, get } from "firebase/database";
 import styles from './styles.module.css'; // Create this for styling
+import { RxCross2 } from "react-icons/rx";
 
 const DeviceDetailsModal = ({ deviceId, deviceName, onClose }) => {
   const [readings, setReadings] = useState(null);
@@ -27,7 +28,7 @@ const DeviceDetailsModal = ({ deviceId, deviceName, onClose }) => {
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h3>⚡ {deviceName}</h3>
-          <button onClick={onClose}>&times;</button>
+          <button onClick={onClose}><RxCross2 /></button>
         </div>
         <div className={styles.body}>
           <div className={styles.row}>
